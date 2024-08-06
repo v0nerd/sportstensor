@@ -1,4 +1,3 @@
-import random
 import bittensor as bt
 
 import os
@@ -23,6 +22,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from matplotlib import pyplot as plt
 
 from st.models.soccer import SoccerPredictionModel
+import secrets
 
 
 class MLSSoccerPredictionModel(SoccerPredictionModel):
@@ -46,8 +46,8 @@ class MLSSoccerPredictionModel(SoccerPredictionModel):
             self.prediction.homeTeamScore = int(pred_scores[0])
             self.prediction.awayTeamScore = int(pred_scores[1])
         else:
-            self.prediction.homeTeamScore = random.randint(0, 10)
-            self.prediction.awayTeamScore = random.randint(0, 10)
+            self.prediction.homeTeamScore = secrets.SystemRandom().randint(0, 10)
+            self.prediction.awayTeamScore = secrets.SystemRandom().randint(0, 10)
 
     def activate(self, matchDate, homeTeamName, awayTeamName):
         data = self.get_data()
@@ -407,6 +407,6 @@ class MLSSoccerPredictionModel(SoccerPredictionModel):
         return fbref_team_name_format[team_name]
 
     def randomised_sleep_time(self, lower_bound, upper_bound):
-        delay = random.uniform(lower_bound, upper_bound)
+        delay = secrets.SystemRandom().uniform(lower_bound, upper_bound)
         print(f" Sleeping for {delay:.2f} seconds...")
         time.sleep(delay)
