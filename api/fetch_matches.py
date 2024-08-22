@@ -4,6 +4,7 @@ import schedule
 import time
 import logging
 from datetime import datetime, timedelta, timezone
+from security import safe_requests
 
 # Setup basic configuration for logging
 logging.basicConfig(
@@ -79,7 +80,7 @@ def fetch_and_store_events():
 
     for url in urls:
         try:
-            response = requests.get(url)
+            response = safe_requests.get(url)
             data = response.json()
             if "events" in data:
                 filtered_events = [
