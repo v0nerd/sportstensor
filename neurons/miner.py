@@ -26,6 +26,8 @@ from base.miner import BaseMinerNeuron
 from common import constants
 from common.protocol import GetMatchPrediction
 from st.sport_prediction_model import make_match_prediction
+# from helper.cache import CacheManager
+from helper.db import DatabaseManager
 
 
 class Miner(BaseMinerNeuron):
@@ -33,6 +35,15 @@ class Miner(BaseMinerNeuron):
 
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
+        # self.cache_manager = CacheManager()
+        db_params = {
+            "db_name": "sportstensor",
+            "db_user": "root",
+            "db_password": "bettensor_password",
+            "db_host": "localhost",
+            "db_port": 5432,
+        }
+        self.db_manager = DatabaseManager(**db_params)
 
     async def forward(self, synapse: GetMatchPrediction) -> GetMatchPrediction:
         bt.logging.info(
@@ -41,7 +52,22 @@ class Miner(BaseMinerNeuron):
 
         # Make the match prediction based on the requested MatchPrediction object
         # TODO: does this need to by async?
+        matchId = synapse.match_prediction.matchId
+        bt.logging.debug(f"Looking up prediction for matchId: {matchId}")
+        if matchId:
+            pred = self.db_manager.get_prediction_by_matchId(matchId)
+            bt.logging.debug(f"Found prediction: {pred}")
+            if pred:
+                synapse.match_prediction.homeTeamScore = pred.get("hometeamscore")
+                synapse.match_prediction.awayTeamScore = pred.get("awayteamscore")
+                synapse.version = constants.PROTOCOL_VERSION
+                bt.logging.success(
+                    f"Returning MatchPrediction to {synapse.dendrite.hotkey}: \n{synapse.match_prediction}."
+                )
+                return synapse
+        bt.logging.info("skipping db lookup")
         synapse.match_prediction = make_match_prediction(synapse.match_prediction)
+        self.db_manager.add_prediction(synapse.match_prediction)
         synapse.version = constants.PROTOCOL_VERSION
 
         bt.logging.success(

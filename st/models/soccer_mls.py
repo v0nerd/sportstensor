@@ -23,7 +23,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from matplotlib import pyplot as plt
 
 from st.models.soccer import SoccerPredictionModel
-
+from helper.cache import CacheManager
 
 class MLSSoccerPredictionModel(SoccerPredictionModel):
     def __init__(self, prediction):
@@ -32,6 +32,7 @@ class MLSSoccerPredictionModel(SoccerPredictionModel):
         self.mls_fixture_data_filepath = "mls/fixture_data.xlsx"
         self.mls_model_filepath = "mls/basic_model.keras"
         self.mls_combined_table_filepath = "mls/combined_table.csv"
+        self.cache_manager = CacheManager()
 
     def make_prediction(self):
         bt.logging.info("Predicting MLS soccer match...")
@@ -39,12 +40,20 @@ class MLSSoccerPredictionModel(SoccerPredictionModel):
         homeTeamName = self.prediction.homeTeamName
         awayTeamName = self.prediction.awayTeamName
 
+        preds = self.cache_manager.cached_predictions
+        if preds is not None and (homeTeamName, awayTeamName) in preds:
+            pred_scores = preds[(homeTeamName, awayTeamName)]
+            self.prediction.homeTeamScore = int(pred_scores[0])
+            self.prediction.awayTeamScore = int(pred_scores[1])
+            return
+
         predictions = self.activate(matchDate, homeTeamName, awayTeamName)
 
         if predictions is not None and (homeTeamName, awayTeamName) in predictions:
             pred_scores = predictions[(homeTeamName, awayTeamName)]
             self.prediction.homeTeamScore = int(pred_scores[0])
             self.prediction.awayTeamScore = int(pred_scores[1])
+            self.cache_manager.update_cached_predictions(predictions)
         else:
             self.prediction.homeTeamScore = random.randint(0, 10)
             self.prediction.awayTeamScore = random.randint(0, 10)
