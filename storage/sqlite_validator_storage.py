@@ -5,7 +5,6 @@ import time
 import bittensor as bt
 import sqlite3
 import threading
-import random
 from pydantic import ValidationError
 from typing import Any, Dict, Optional, Set, Tuple, List
 from common.data import (
@@ -24,6 +23,7 @@ from common.constants import (
     SCORING_CUTOFF_IN_DAYS,
 )
 from storage.validator_storage import ValidatorStorage
+import secrets
 
 
 class SqliteValidatorStorage(ValidatorStorage):
@@ -336,8 +336,7 @@ class SqliteValidatorStorage(ValidatorStorage):
             now_str = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
             if IS_DEV:
-                random_uid = random.randint(
-                    1, 16
+                random_uid = secrets.SystemRandom().randint(1, 16
                 )  # Generate a random integer between 1 and 16
 
             # Parse every MatchPrediction into a list of values to insert.
