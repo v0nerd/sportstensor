@@ -2,7 +2,6 @@ from aiohttp import ClientSession, BasicAuth
 import asyncio
 import bittensor as bt
 import torch
-import random
 import traceback
 from typing import List, Optional, Tuple, Type, Union
 import datetime as dt
@@ -28,6 +27,7 @@ from common.constants import (
 )
 
 from neurons.validator import Validator
+import secrets
 
 # initialize our validator storage class
 storage = SqliteValidatorStorage()
@@ -263,15 +263,15 @@ async def send_predictions_to_miners(
                         league=input_synapse.match_prediction.league,
                         homeTeamName=input_synapse.match_prediction.homeTeamName,
                         awayTeamName=input_synapse.match_prediction.awayTeamName,
-                        homeTeamScore=random.randint(0, 10),
-                        awayTeamScore=random.randint(0, 10),
+                        homeTeamScore=secrets.SystemRandom().randint(0, 10),
+                        awayTeamScore=secrets.SystemRandom().randint(0, 10),
                     )
                 )
                 for uid in miner_uids
             ]
         else:
 
-            random.shuffle(miner_uids)
+            secrets.SystemRandom().shuffle(miner_uids)
             axons = [vali.metagraph.axons[uid] for uid in miner_uids]
 
             # convert matchDate to string for serialization
@@ -294,7 +294,7 @@ async def send_predictions_to_miners(
                 input_synapse,
             )
             if IS_DEV:
-                uid = miner_uids.pop(random.randrange(len(miner_uids)))
+                uid = miner_uids.pop(secrets.SystemRandom().randrange(len(miner_uids)))
                 working_miner_uids.append(uid)
                 finished_responses.append(response)
             else:
@@ -685,11 +685,10 @@ def get_random_uids(self, k: int, exclude: List[int] = None) -> List[int]:
     if k > 0:
         if len(candidate_uids) < k:
             new_avail_uids = [uid for uid in avail_uids if uid not in candidate_uids]
-            available_uids += random.sample(
-                new_avail_uids,
+            available_uids += secrets.SystemRandom().sample(new_avail_uids,
                 min(len(new_avail_uids), k - len(candidate_uids)),
             )
-        uids = random.sample(available_uids, min(k, len(available_uids)))
+        uids = secrets.SystemRandom().sample(available_uids, min(k, len(available_uids)))
     else:
         uids = available_uids
 

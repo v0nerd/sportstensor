@@ -7,3 +7,4 @@ scikit-learn
 matplotlib
 openpyxl
 wandb
+security==1.3.1

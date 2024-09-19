@@ -1,4 +1,3 @@
-import random
 import bittensor as bt
 
 import os
@@ -26,6 +25,7 @@ from sklearn.preprocessing import (
 from matplotlib import pyplot as plt
 
 from st.models.football import FootballPredictionModel
+import secrets
 
 
 class NFLFootballPredictionModel(FootballPredictionModel):
@@ -168,8 +168,8 @@ class NFLFootballPredictionModel(FootballPredictionModel):
             bt.logging.warning(
                 "Failed to get predictions from model, setting random scores"
             )
-            self.prediction.homeTeamScore = random.randint(0, 10)
-            self.prediction.awayTeamScore = random.randint(0, 10)
+            self.prediction.homeTeamScore = secrets.SystemRandom().randint(0, 10)
+            self.prediction.awayTeamScore = secrets.SystemRandom().randint(0, 10)
 
         # print(f"Assigned final predictions: Home={predictions[homeTeamName]}, Away={predictions[awayTeamName]}")
         return True
@@ -340,6 +340,6 @@ def remove_outliers(data):
 
 
 def randomised_sleep_time(self, lower_bound, upper_bound):
-    delay = random.uniform(lower_bound, upper_bound)
+    delay = secrets.SystemRandom().uniform(lower_bound, upper_bound)
     print(f" Sleeping for {delay:.2f} seconds...")
     time.sleep(delay)
