@@ -1,12 +1,15 @@
 import psycopg2
+import contextlib
 from psycopg2.extras import RealDictCursor
 from psycopg2.pool import SimpleConnectionPool
 import bittensor as bt
 import traceback
-import os
 import time
 from typing import Dict, Any
 from datetime import datetime as dt
+
+from common.data import Match
+
 
 class DatabaseManager:
     def __init__(self, db_name, db_user, db_password, db_host='localhost', db_port=5432, max_connections=10):
@@ -124,6 +127,60 @@ class DatabaseManager:
             except Exception as e:
                 bt.logging.error(f"Error creating table {table_name}: {e}")
 
+    def check_match(self, matchId: str) -> Match:
+        """Check if a match with the given ID exists in the database."""
+        query = """
+        SELECT EXISTS(SELECT 1 FROM matches WHERE matchId = ?)
+        """
+        try:
+            results = self.execute_query(query, (matchId,))
+            if results:
+                print(results)
+                return True
+        except Exception as e:
+            bt.logging.error(f"Error getting predictions: {str(e)}")
+            bt.logging.error(f"Traceback: {traceback.format_exc()}")
+            return False
+
+    def insert_match(self, match: Match):
+        is_complete = 0
+        current_utc_time = dt.utcnow().isoformat()
+
+        query = """
+        INSERT INTO matches (matchId, matchDate, sport, league, homeTeamName, awayTeamName, homeTeamScore, awayTeamScore, isComplete, lastUpdated)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+
+        params = (
+            match.matchId,
+            match.matchDate,
+            match.sport,
+            match.league,
+            match.homeTeamName,
+            match.awayTeamName,
+            match.homeTeamScore,
+            match.awayTeamScore,
+            is_complete,
+            current_utc_time
+        )
+
+        try:
+            bt.logging.debug(f"Executing query: {query}")
+            bt.logging.debug(f"Query parameters: {params}")
+            result = self.execute_query(query, params)
+            if result:
+                inserted_row = result[0] if isinstance(result, list) else result
+                bt.logging.debug(f"Match added successfully: {inserted_row}")
+                return {'status': 'success', 'message': f"Match added successfully", 'data': inserted_row}
+            else:
+                bt.logging.error("No row returned after insertion")
+                bt.logging.error(f"Database result: {result}")
+                return {'status': 'error', 'message': "No row returned after insertion"}
+        except Exception as e:
+            bt.logging.error(f"Error adding match: {str(e)}")
+            bt.logging.error(f"Traceback: {traceback.format_exc()}")
+            return {'status': 'error', 'message': f"Error adding match: {str(e)}"}
+
     def execute_query(self, query, params=None):
         # print(f"DatabaseManager: Executing query: {query}")
         # print(f"DatabaseManager: Query parameters: {params}")
@@ -177,32 +234,25 @@ class DatabaseManager:
         current_utc_time = dt.utcnow().isoformat()
 
         query = """
-            INSERT INTO matches (matchId, matchDate, sport, homeTeamName, awayTeamName, homeTeamScore, awayTeamScore, league, isComplete, lastUpdated) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT (matchId) DO UPDATE 
-            SET 
-                matchDate = EXCLUDED.matchDate,
-                sport = EXCLUDED.sport,
-                homeTeamName = EXCLUDED.homeTeamName,
-                awayTeamName = EXCLUDED.awayTeamName,
-                homeTeamScore = EXCLUDED.homeTeamScore,
-                awayTeamScore = EXCLUDED.awayTeamScore,
-                league = EXCLUDED.league,
-                isComplete = EXCLUDED.isComplete,
-                lastUpdated = EXCLUDED.lastUpdated;
-            """
+            UPDATE matches
+            SET homeTeamScore = %s, awayTeamScore = %s, isComplete = %s, lastUpdated = %s
+            WHERE matchDate = %s
+            AND sport = %s
+            AND homeTeamName = %s
+            AND awayTeamName = %s
+            AND league = %s
+        """
 
         params = (
-            prediction.matchId,
+            prediction.homeTeamScore,
+            prediction.awayTeamScore,
+            is_complete,
+            current_utc_time,
             prediction.matchDate,
             prediction.sport,
             prediction.homeTeamName,
             prediction.awayTeamName,
-            prediction.homeTeamScore,
-            prediction.awayTeamScore,
             prediction.league,
-            is_complete,
-            current_utc_time,
         )
 
         try:
@@ -224,14 +274,18 @@ class DatabaseManager:
             bt.logging.error(f"Traceback: {traceback.format_exc()}")
             return {'status': 'error', 'message': f"Error adding prediction: {str(e)}"}
 
-    def get_prediction_by_matchId(self, matchId):
+    def get_prediction(self, homeTeamName: str, awayTeamName: str):
+        current_date = dt.utcnow().isoformat()
         query = """
         SELECT *
         FROM matches
-        WHERE matchId = %s
+        WHERE hometeamname = %s
+        AND awayteamname = %s
+        AND matchdate > %s
         """
         try:
-            results = self.execute_query(query, (str(matchId),))
+            print(current_date)
+            results = self.execute_query(query, (str(homeTeamName), str(awayTeamName), current_date))
             if results:
                 return results[0]
         except Exception as e:

@@ -188,7 +188,7 @@ class MatchPrediction(Prediction):
     awayTeamName: str
     homeTeamScore: Optional[int]
     awayTeamScore: Optional[int]
-    stats: Optional[List[PlayerPrediction]]
+    # stats: Optional[List[PlayerPrediction]]
 
     # Validators to ensure immutability
     @validator(

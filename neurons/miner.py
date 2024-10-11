@@ -39,7 +39,7 @@ class Miner(BaseMinerNeuron):
         db_params = {
             "db_name": "sportstensor",
             "db_user": "root",
-            "db_password": "bettensor_password",
+            "db_password": "Thunder@517",
             "db_host": "localhost",
             "db_port": 5432,
         }
@@ -55,19 +55,27 @@ class Miner(BaseMinerNeuron):
         matchId = synapse.match_prediction.matchId
         bt.logging.debug(f"Looking up prediction for matchId: {matchId}")
         if matchId:
-            pred = self.db_manager.get_prediction_by_matchId(matchId)
+            pred = self.db_manager.get_prediction(synapse.match_prediction.homeTeamName, synapse.match_prediction.awayTeamName)
             bt.logging.debug(f"Found prediction: {pred}")
             if pred:
-                synapse.match_prediction.homeTeamScore = pred.get("hometeamscore")
-                synapse.match_prediction.awayTeamScore = pred.get("awayteamscore")
-                synapse.version = constants.PROTOCOL_VERSION
-                bt.logging.success(
-                    f"Returning MatchPrediction to {synapse.dendrite.hotkey}: \n{synapse.match_prediction}."
-                )
-                return synapse
-        bt.logging.info("skipping db lookup")
+                print("Found prediction")
+                print(pred.get("hometeamscore"), pred.get("awayteamscore"))
+                if pred.get("hometeamscore") is not None and pred.get("awayteamscore") is not None:
+                    synapse.match_prediction.homeTeamScore = pred.get("hometeamscore")
+                    synapse.match_prediction.awayTeamScore = pred.get("awayteamscore")
+                    synapse.version = constants.PROTOCOL_VERSION
+                    bt.logging.success(
+                        f"Returning MatchPrediction to {synapse.dendrite.hotkey}: \n{synapse.match_prediction}."
+                    )
+                    return synapse
+                else:
+                    bt.logging.warning(
+                        f"Prediction for matchId {matchId} is incomplete. Making new prediction."
+                    )
+            else:
+                bt.logging.info("Skipping db lookup, no prediction found.")
         synapse.match_prediction = make_match_prediction(synapse.match_prediction)
-        self.db_manager.add_prediction(synapse.match_prediction)
+        # self.db_manager.add_prediction(synapse.match_prediction)
         synapse.version = constants.PROTOCOL_VERSION
 
         bt.logging.success(
