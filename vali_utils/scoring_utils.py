@@ -7,7 +7,6 @@ from datetime import datetime, timezone
 import pytz
 from typing import List, Dict, Tuple, Optional
 from tabulate import tabulate
-import random
 
 import bittensor as bt
 from storage.sqlite_validator_storage import get_storage
@@ -20,6 +19,7 @@ from common.constants import (
     COPYCAT_PENALTY_SCORE,
     COPYCAT_PUNISHMENT_START_DATE
 )
+import secrets
 
 def calculate_edge(prediction_team: str, prediction_prob: float, actual_team: str, closing_odds: float | None) -> Tuple[float, int]:
     """
@@ -342,7 +342,7 @@ def calculate_incentives_and_update_scores(vali):
             bt.logging.debug(f"  • Rho: {rho:.4f}")
             total_score = 0
             for pwmd in predictions_with_match_data:
-                log_prediction = random.random() < 0.005
+                log_prediction = secrets.SystemRandom().random() < 0.005
 
                 # Grab the match odds from local db
                 match_odds = storage.get_match_odds(matchId=pwmd.prediction.matchId)

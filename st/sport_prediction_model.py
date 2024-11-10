@@ -3,7 +3,7 @@ from typing import List
 import bittensor as bt
 from common.data import MatchPrediction, Sport, League, get_league_from_string, ProbabilityChoice
 import logging
-import random
+import secrets
 
 
 class SportPredictionModel(ABC):
@@ -112,7 +112,7 @@ def make_match_prediction(prediction: MatchPrediction):
 
 def generate_random_probability_no_tie() -> List[float]:
     # Generate a random probability for team A
-    prob_a = random.uniform(0.05, 0.95)
+    prob_a = secrets.SystemRandom().uniform(0.05, 0.95)
     prob_b = 1 - prob_a
     
     return [prob_a, prob_b]
@@ -122,7 +122,7 @@ def generate_random_probabilities_with_tie() -> List[float]:
     total = 0
     probs = [0, 0, 0]
     for i in range(3):
-        probs[i] = random.uniform(0.1, 0.8)
+        probs[i] = secrets.SystemRandom().uniform(0.1, 0.8)
         total += probs[i]
     
     # Normalize probabilities so they sum to 1

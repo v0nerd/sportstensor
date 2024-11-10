@@ -1,7 +1,6 @@
 import logging
 from pathlib import Path
 from typing import List, Set, Dict, Union
-import random
 from datetime import datetime
 
 import bittensor as bt
@@ -12,6 +11,7 @@ from common.constants import (
     SUSPICIOUS_CONSECUTIVE_MATCHES_THRESHOLD
 )
 from vali_utils.analysis_utils import StatisticalAnalyzer
+import secrets
 
 
 class CopycatDetectionController:
@@ -93,7 +93,7 @@ class CopycatDetectionController:
                         if history['absolute_difference'] > greatest_abs_diff:
                             greatest_abs_diff = history['absolute_difference']
                 
-                if random.random() < 0.005 and (value['num_exact_predictions'] >= EXACT_MATCH_PREDICTIONS_THRESHOLD or ('consecutive_patterns' in value and len(value['consecutive_patterns']['streak_details']) > 0)):
+                if secrets.SystemRandom().random() < 0.005 and (value['num_exact_predictions'] >= EXACT_MATCH_PREDICTIONS_THRESHOLD or ('consecutive_patterns' in value and len(value['consecutive_patterns']['streak_details']) > 0)):
                     print(f"\nMiners: {value['miners']}, Matches: {value['num_matches']}, Predictions: {value['num_predictions']}, Predictions per match: {value['predictions_per_match']}, Exact predictions: {value['num_exact_predictions']}")
                     # print consecutive patterns
                     if 'consecutive_patterns' in value and len(value['consecutive_patterns']['streak_details']) > 0:
