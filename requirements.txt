@@ -9,3 +9,4 @@ openpyxl
 wandb
 tabulate
 python-dotenv
+security==1.3.1

@@ -1,4 +1,3 @@
-import requests
 import api.db as db
 import schedule
 import time
@@ -6,6 +5,7 @@ import logging
 from datetime import datetime, timezone
 from api.config import ODDS_API_KEY
 import pytz
+from security import safe_requests
 
 # Setup basic configuration for logging
 logging.basicConfig(
@@ -155,7 +155,7 @@ def fetch_odds():
             "apiKey": ODDS_API_KEY,
             "regions": type['region'],
         }
-        response = requests.get(api_url, params=params)
+        response = safe_requests.get(api_url, params=params)
         if response.status_code == 200:
             data = response.json()
             all_odds.extend(data)
