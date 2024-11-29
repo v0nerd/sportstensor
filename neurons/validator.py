@@ -24,7 +24,6 @@ import time
 import asyncio
 import threading
 import traceback
-import requests
 
 # Bittensor
 import bittensor as bt
@@ -57,6 +56,7 @@ import vali_utils.scoring_utils as scoring_utils
 
 # import base validator class which takes care of most of the boilerplate
 from base.validator import BaseValidatorNeuron
+from security import safe_requests
 
 
 class Validator(BaseValidatorNeuron):
@@ -226,7 +226,7 @@ class Validator(BaseValidatorNeuron):
     def load_league_controls(self):
         # get league controls from CSV URL and load them into our settings
         try:
-            response = requests.get(self.league_controls_url)
+            response = safe_requests.get(self.league_controls_url)
             response.raise_for_status()
 
             # split the response text into lines
@@ -287,7 +287,7 @@ class Validator(BaseValidatorNeuron):
     def load_scoring_controls(self):
         # get scoring constant controls from CSV URL and load them into our settings
         try:
-            response = requests.get(self.scoring_controls_url)
+            response = safe_requests.get(self.scoring_controls_url)
             response.raise_for_status()
 
             # split the response text into lines

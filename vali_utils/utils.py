@@ -26,6 +26,7 @@ from common.constants import (
 
 from neurons.validator import Validator
 from vali_utils import scoring_utils
+from security import safe_requests
 
 # initialize our validator storage class
 storage = SqliteValidatorStorage.get_instance()
@@ -89,7 +90,7 @@ async def sync_match_data(match_data_endpoint) -> bool:
 def fetch_match_odds(match_odds_data_endpoint: str, match_id: str) -> Dict:
     url = f"{match_odds_data_endpoint}?matchId={match_id}"
     # TODO: add in authentication?
-    response = requests.get(url, timeout=5)
+    response = safe_requests.get(url, timeout=5)
     response.raise_for_status()
     return response.json()
 
