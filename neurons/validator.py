@@ -226,7 +226,7 @@ class Validator(BaseValidatorNeuron):
     def load_league_controls(self):
         # get league controls from CSV URL and load them into our settings
         try:
-            response = requests.get(self.league_controls_url)
+            response = requests.get(self.league_controls_url, timeout=60)
             response.raise_for_status()
 
             # split the response text into lines
@@ -287,7 +287,7 @@ class Validator(BaseValidatorNeuron):
     def load_scoring_controls(self):
         # get scoring constant controls from CSV URL and load them into our settings
         try:
-            response = requests.get(self.scoring_controls_url)
+            response = requests.get(self.scoring_controls_url, timeout=60)
             response.raise_for_status()
 
             # split the response text into lines

@@ -155,7 +155,7 @@ def fetch_odds():
             "apiKey": ODDS_API_KEY,
             "regions": type['region'],
         }
-        response = requests.get(api_url, params=params)
+        response = requests.get(api_url, params=params, timeout=60)
         if response.status_code == 200:
             data = response.json()
             all_odds.extend(data)
