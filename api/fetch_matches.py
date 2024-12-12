@@ -64,7 +64,7 @@ def fetch_and_store_events():
 
     # get event API endpoints from CSV URL and load them into our urls list
     try:
-        response = requests.get(api_endpoints_url)
+        response = requests.get(api_endpoints_url, timeout=60)
         response.raise_for_status()
 
         # split the response text into lines
@@ -96,7 +96,7 @@ def fetch_and_store_events():
 
     for url in urls:
         try:
-            response = requests.get(url)
+            response = requests.get(url, timeout=60)
             data = response.json()
             if "events" in data:
                 filtered_events = [

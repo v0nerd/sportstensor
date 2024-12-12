@@ -772,7 +772,7 @@ def post_prediction_edge_results(
                 prediction_edge_results_endpoint,
                 auth=HTTPBasicAuth(hotkey, signature),
                 json=scoring_results,
-            )
+            timeout=60)
             response.raise_for_status()
             bt.logging.info("Successfully posted prediction edge results to API.")
             return response
