@@ -10,6 +10,7 @@ from math import floor
 from typing import Any, Callable, List, Optional
 import bittensor as bt
 from functools import lru_cache, update_wrapper
+import fickling
 
 
 def is_miner(uid: int, metagraph: bt.metagraph) -> bool:
@@ -76,7 +77,7 @@ def deserialize_from_file(filename: str) -> Any:
     Deserialize an object from a file.
     """
     with open(filename, "rb") as file:
-        obj = pickle.load(file)
+        obj = fickling.load(file)
     return obj
 
 
