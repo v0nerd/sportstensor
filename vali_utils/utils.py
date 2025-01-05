@@ -11,6 +11,8 @@ import datetime as dt
 from datetime import timedelta, timezone
 import time
 import copy
+import sqlite3
+import psycopg2
 
 from common.data import League, Match, MatchPrediction, ProbabilityChoice, get_probablity_choice_from_string
 from common.protocol import GetLeagueCommitments, GetMatchPrediction
@@ -33,6 +35,103 @@ from vali_utils import scoring_utils
 storage = SqliteValidatorStorage.get_instance()
 storage.initialize()
 
+
+# Mirroring the sqlite db to postgres
+def mirror_sqlite_to_postgres(): # Create a connection to the sqlite database
+    sqlite_conn = sqlite3.connect("SportsTensorEdge.db", uri=True, detect_types=sqlite3.PARSE_DECLTYPES, timeout=120.0)
+    sqlite_conn.row_factory = sqlite3.Row
+    sqlite_cursor = sqlite_conn.cursor()
+
+    db_params = {
+            "db_name": "sportstensor",
+            "db_user": "root",
+            "db_password": "Thunder@517",
+            "db_host": "localhost",
+            "db_port": 5432,
+        }
+
+    # Create a connection to the postgres database
+    postgres_conn = psycopg2.connect(
+        dbname=db_params["db_name"],
+        user=db_params["db_user"],
+        password=db_params["db_password"],
+        host=db_params["db_host"],
+        port=db_params["db_port"],
+    )
+
+    MATCHES_TABLE_CREATE = """CREATE TABLE IF NOT EXISTS MatchesReal (
+                            matchId TEXT PRIMARY KEY,
+                            matchDate TEXT,
+                            sport TEXT,
+                            league TEXT,
+                            homeTeamName TEXT,
+                            awayTeamName TEXT,
+                            homeTeamScore TEXT,
+                            awayTeamScore TEXT,
+                            isComplete INTEGER DEFAULT 0,
+                            lastUpdated TEXT,
+                            homeTeamOdds REAL,
+                            awayTeamOdds REAL,
+                            drawOdds REAL
+                            )"""
+
+    with postgres_conn.cursor() as postgres_cursor:
+        # Create the tables in the postgres database
+        # postgres_cursor.execute(SqliteValidatorStorage.LEAGUES_TABLE_CREATE)
+        drop_table_query = "DROP TABLE IF EXISTS MatchesReal;DROP TABLE IF EXISTS MatchesOdds;"
+        postgres_cursor.execute(drop_table_query)
+        postgres_cursor.execute(MATCHES_TABLE_CREATE)
+        postgres_cursor.execute(SqliteValidatorStorage.MATCH_ODDS_CREATE)
+        postgres_cursor.execute(SqliteValidatorStorage.MATCHPREDICTIONREQUESTS_TABLE_CREATE)
+        postgres_cursor.execute(SqliteValidatorStorage.MATCHPREDICTIONS_TABLE_CREATE)
+
+        # Copy the data from the sqlite database to the postgres database
+        # sqlite_cursor.execute("SELECT * FROM Leagues")
+        # leagues = sqlite_cursor.fetchall()
+        # for league in leagues:
+        #     postgres_cursor.execute(
+        #         """
+        #         INSERT INTO Leagues (leagueId, leagueName, sport, isActive, lastUpdated)
+        #         VALUES (%s, %s, %s, %s, %s)
+        #         ON CONFLICT (leagueId) DO UPDATE SET
+        #         leagueName = EXCLUDED.leagueName,
+        #         sport = EXCLUDED.sport,
+        #         isActive = EXCLUDED.isActive,
+        #         lastUpdated = EXCLUDED.lastUpdated
+        #         """,
+        #         league,
+        #     )
+
+        sqlite_cursor.execute("SELECT * FROM Matches")
+        matches = sqlite_cursor.fetchall()
+        for match in matches:
+            try:
+                postgres_cursor.execute(
+                    """
+                    INSERT INTO MatchesReal (matchId, matchDate, sport, league, homeTeamName, awayTeamName, homeTeamScore, awayTeamScore, isComplete, lastUpdated, homeTeamOdds, awayTeamOdds, drawOdds)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    match, # match is a tuple
+                )
+            except Exception as e:
+                print(match[0], match[1], match[3], match[4], match[5])
+                continue
+
+        sqlite_cursor.execute("SELECT * FROM MatchOdds")
+        match_odds = sqlite_cursor.fetchall()
+        for match_odd in match_odds:
+            try:
+                postgres_cursor.execute(
+                    """
+                    INSERT INTO MatchOdds (matchId, homeTeamOdds, awayTeamOdds, drawOdds, lastUpdated)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    match_odd,
+                )
+            except Exception as e:
+                continue
+        
+        postgres_cursor.connection.commit()
 
 async def sync_match_data(match_data_endpoint) -> bool:
     try:
@@ -82,6 +181,7 @@ async def sync_match_data(match_data_endpoint) -> bool:
             storage.update_matches(matches_to_update)
             bt.logging.info(f"Updated {len(matches_to_update)} existing matches.")
 
+        mirror_sqlite_to_postgres()
         return True
 
     except Exception as e:

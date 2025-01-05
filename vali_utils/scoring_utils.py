@@ -1,3 +1,5 @@
+import numpy as np
+from scipy.optimize import minimize_scalar
 import math
 import numpy as np
 from scipy.stats import pareto
@@ -23,6 +25,34 @@ from common.constants import (
     MIN_PROBABILITY,
     MIN_PROB_FOR_DRAWS,
 )
+
+def y(closing_odds, prob):
+    t = 1.0 # Controls the spread/width of the Gaussian curve outside the plateau region. Larger t means slower decay in the exponential term
+    a = -2 # Controls the height of the plateau boundary. More negative a means lower plateau boundary
+    b = 0.3 # Controls how quickly the plateau boundary changes with odds. Larger b means faster exponential decay in plateau width
+    c = 3 # Minimum plateau width/boundary
+
+    w = a * np.exp(-b * (closing_odds - 1)) + c
+    diff = abs(closing_odds - 1/prob)
+
+    # note that sigma^2 = odds now
+    # plateaued curve. 
+    exp_component = 1.0 if diff <= w else np.exp(-np.power(diff, 2) / (t*2*closing_odds))
+
+    return exp_component*(closing_odds-1/prob)
+
+def find_extrema(c):
+    # Find minimum of y
+    result_min = minimize_scalar(lambda x: y(c, x), bounds=(0, 1 / c), method='bounded')
+    # Find maximum of y by minimizing the negative of y
+    result_max = minimize_scalar(lambda x: -y(c, x), bounds=(1 / c, 1), method='bounded')
+
+    min_y = result_min.fun
+    max_y = -result_max.fun
+    x_min = result_min.x
+    x_max = result_max.x
+
+    return (min_y, x_min), (max_y, x_max)
 
 def calculate_edge(prediction_team: str, prediction_prob: float, actual_team: str, closing_odds: float | None) -> Tuple[float, int]:
     """
