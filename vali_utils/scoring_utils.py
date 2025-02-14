@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 import pytz
 from typing import List, Dict, Tuple, Optional
 from tabulate import tabulate
-import random
 
 import bittensor as bt
 from storage.sqlite_validator_storage import get_storage
@@ -26,6 +25,7 @@ from common.constants import (
     MAX_INCR_ROI_DIFF_PERCENTAGE,
     ROI_SCORING_WEIGHT
 )
+import secrets
 
 def calculate_edge(prediction_team: str, prediction_prob: float, actual_team: str, closing_odds: float | None) -> Tuple[float, int]:
     """
@@ -383,7 +383,7 @@ def calculate_incentives_and_update_scores(vali):
                 
                 total_score = 0
                 for pwmd in predictions_with_match_data:
-                    log_prediction = random.random() < 0.005
+                    log_prediction = secrets.SystemRandom().random() < 0.005
                     if log_prediction:
                         bt.logging.debug(f"Randomly logged prediction for miner {uid} in league {league.name}:")
                         bt.logging.debug(f"  • Number of predictions: {len(predictions_with_match_data)}")

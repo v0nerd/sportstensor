@@ -4,7 +4,6 @@ import asyncio
 import requests
 from requests.auth import HTTPBasicAuth
 import bittensor as bt
-import random
 import traceback
 from typing import List, Optional, Tuple, Dict
 import datetime as dt
@@ -26,6 +25,7 @@ from common.constants import (
 
 from neurons.validator import Validator
 from vali_utils import scoring_utils
+import secrets
 
 # initialize our validator storage class
 storage = SqliteValidatorStorage.get_instance()
@@ -299,7 +299,7 @@ async def send_league_commitments_to_miners(
     vali: Validator, input_synapse: GetLeagueCommitments, miner_uids: List[int]
 ):
     try:
-        random.shuffle(miner_uids)
+        secrets.SystemRandom().shuffle(miner_uids)
         
         async def process_batch(batch_uids: List[int]):
             axons = [vali.metagraph.axons[uid] for uid in batch_uids]
@@ -473,7 +473,7 @@ async def send_predictions_to_miners(
     vali: Validator, input_synapse: GetMatchPrediction, miner_uids: List[int]
 ) -> Tuple[List[MatchPrediction], List[int]]:
     try:
-        random.shuffle(miner_uids)
+        secrets.SystemRandom().shuffle(miner_uids)
 
         async def process_batch(batch_uids: List[int]):
             axons = [vali.metagraph.axons[uid] for uid in batch_uids]
@@ -533,7 +533,7 @@ async def send_predictions_to_miners(
             all_working_miner_uids.extend(working_miner_uids)
 
             # add a random delay between batches to spread out the requests
-            await asyncio.sleep(random.uniform(1.0, 30.0)) # 1-30 seconds
+            await asyncio.sleep(secrets.SystemRandom().uniform(1.0, 30.0)) # 1-30 seconds
 
         if len(all_working_miner_uids) == 0:
             bt.logging.info("No miner responses available.")
@@ -934,11 +934,10 @@ def get_random_uids(self, k: int, exclude: List[int] = None) -> List[int]:
     if k > 0:
         if len(candidate_uids) < k:
             new_avail_uids = [uid for uid in avail_uids if uid not in candidate_uids]
-            available_uids += random.sample(
-                new_avail_uids,
+            available_uids += secrets.SystemRandom().sample(new_avail_uids,
                 min(len(new_avail_uids), k - len(candidate_uids)),
             )
-        uids = random.sample(available_uids, min(k, len(available_uids)))
+        uids = secrets.SystemRandom().sample(available_uids, min(k, len(available_uids)))
     else:
         uids = available_uids
 

@@ -6,7 +6,6 @@ import bittensor
 import uvicorn
 import asyncio
 import logging
-import random
 from fastapi import FastAPI, HTTPException, Depends, Body, Path, Security
 from fastapi.security import HTTPBasicCredentials, HTTPBasic
 from fastapi.security.api_key import APIKeyHeader
@@ -26,6 +25,7 @@ from datetime import datetime
 import api.db as db
 from api.config import NETWORK, NETUID, IS_PROD, API_KEYS, TESTNET_VALI_HOTKEYS
 from common.constants import ENABLE_APP, APP_PREDICTIONS_UNFULFILLED_THRESHOLD
+import secrets
 
 sentry_sdk.init(
     dsn="https://d9cce5fe3664e00bf8857b2e425d9ec5@o4507644404236288.ingest.de.sentry.io/4507644429271120",
@@ -95,7 +95,7 @@ def get_active_vali_hotkey(metagraph, exclude_hotkeys=[]):
     if NETWORK == "test":
         # Get the hotkeys of all testnet validators
         avail_hotkeys = [hotkey for hotkey in TESTNET_VALI_HOTKEYS]
-        return random.choice(avail_hotkeys)
+        return secrets.choice(avail_hotkeys)
 
     for uid in range(metagraph.n.item()):
         if metagraph.validator_permit[uid] and metagraph.hotkeys[uid] not in exclude_hotkeys:
@@ -108,7 +108,7 @@ def get_active_vali_hotkey(metagraph, exclude_hotkeys=[]):
         return None
     
     # Get the hotkey of a random validator with vTrust >= 0.8
-    random_vali_hotkey = random.choice(vali_vtrusts)[1]
+    random_vali_hotkey = secrets.choice(vali_vtrusts)[1]
     
     return random_vali_hotkey
 
