@@ -1,10 +1,10 @@
 import time
 
 import asyncio
-import random
 import bittensor as bt
 
 from typing import List
+import secrets
 
 
 class MockSubtensor(bt.MockSubtensor):
@@ -82,7 +82,7 @@ class MockDendrite(bt.dendrite):
                 # Attach some more required data so it looks real
                 s = self.preprocess_synapse_for_request(axon, s, timeout)
                 # We just want to mock the response, so we'll just fill in some data
-                process_time = random.random()
+                process_time = secrets.SystemRandom().random()
                 if process_time < timeout:
                     s.dendrite.process_time = str(time.time() - start_time)
                     # Update the status code and status message of the dendrite to match the axon
