@@ -1,4 +1,3 @@
-import requests
 import api.db as db
 import logging
 from api.config import ODDS_API_KEY
@@ -6,6 +5,7 @@ import json
 from datetime import timedelta, datetime
 from collections import defaultdict
 import api.fetch_odds as fo
+from security import safe_requests
 
 league_sports_types_mapping = {
     'English Premier League': 'soccer_epl',
@@ -63,7 +63,7 @@ def fetch_odds(api_url, start, intervals):
         }
         logging.info(f"start============>{start}")
         
-        response = requests.get(api_url, params=params)
+        response = safe_requests.get(api_url, params=params)
         
         if response.status_code == 200:
             data = response.json()
