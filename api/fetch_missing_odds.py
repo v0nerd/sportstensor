@@ -63,7 +63,7 @@ def fetch_odds(api_url, start, intervals):
         }
         logging.info(f"start============>{start}")
         
-        response = requests.get(api_url, params=params)
+        response = requests.get(api_url, params=params, timeout=60)
         
         if response.status_code == 200:
             data = response.json()
